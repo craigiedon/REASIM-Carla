@@ -1,27 +1,39 @@
 import dataclasses
+import math
 import time
+from typing import List
 
 from navigation.local_planner import LocalPlanner
 
 from carlaSetupUtils import set_weather, set_sync, setup_actors, delete_actors
 import carla
-from carla import Location, Vehicle
+from carla import Location, Vehicle, Rotation
+
+import re
 
 
-@dataclasses
+@dataclasses.dataclass
 class VehicleStat:
     location: Location
     dist_travelled: float
 
 
-def car_stopped(actor: Vehicle) -> bool:
+def wheels_stopped(wheel_speeds: List[float]) -> bool:
     eps = 1e-10
-    v = actor.get_velocity()
-    return v.length() <= eps
+    return all([math.fabs(ws) <= eps for ws in wheel_speeds])
+
+
+wheel_rx = re.compile("omega=([^\s,]*)")
+
+
+def get_wheel_speeds(v: Vehicle) -> List[float]:
+    wheel_speed_strs = wheel_rx.findall(str(v.get_telemetry_data()))
+    return [float(ws) for ws in wheel_speed_strs]
 
 
 def run():
     actor_list = []
+
     try:
         client = carla.Client('localhost', 2000)
         client.set_timeout(10.0)
@@ -43,16 +55,16 @@ def run():
         # # Find Trigger Friction Blueprint
         friction_bp = world.get_blueprint_library().find('static.trigger.friction')
 
-        extent = carla.Location(500, 500.0, 5.0)
+        extent = carla.Location(700, 500.0, 5.0)
 
-        friction_bp.set_attribute('friction', str(0.0))
+        friction_bp.set_attribute('friction', str(0.65))
         friction_bp.set_attribute('extent_x', str(extent.x))
         friction_bp.set_attribute('extent_y', str(extent.y))
         friction_bp.set_attribute('extent_z', str(extent.z))
 
         # Spawn Trigger Friction
         friction_transform = carla.Transform()
-        friction_transform.location = ego_start_trans.location + Location(x=15)
+        friction_transform.location = ego_start_trans.location + Location(x=25)
         world.spawn_actor(friction_bp, friction_transform)
 
         # Create Camera to follow them
@@ -66,7 +78,8 @@ def run():
             vehicle_stats = [VehicleStat(actor.get_location(), 0.0) for actor in actor_list]
 
             for i in range(num_timesteps):
-                print(f"Time Step {i}")
+                # print(f"Time Step {i}")
+                wheel_speeds = get_wheel_speeds(actor_list[0])
                 world.tick()
 
                 world.debug.draw_box(box=carla.BoundingBox(friction_transform.location, extent * 1e-2),
@@ -87,17 +100,21 @@ def run():
                 # Move both cars forward for 50m, then have them stop for a couple seconds
                 # print([vs.dist_travelled for vs in vehicle_stats])
                 for actor, lp, vs in zip(actor_list, local_planners, vehicle_stats):
-                    if vs.dist_travelled < 30:
+                    if vs.dist_travelled < 20:
                         control = lp.run_step()
                     else:
                         control = carla.VehicleControl()
                         control.throttle = 0.0
-                        control.brake = 0.5
+                        control.brake = 1.0
                         control.hand_brake = False
-                    actor.apply_control(control)
 
-                    if car_stopped(actor):
-                        actor.open_door(carla.VehicleDoor.All)
+                        if wheels_stopped(wheel_speeds):
+                            actor.open_door(carla.VehicleDoor.All)
+                            actor_vel = actor.get_velocity().length()
+                            if actor_vel > 0.01:
+                                print(f"Wheels Stopped, but Velocity = {actor_vel}")
+
+                    actor.apply_control(control)
 
             delete_actors(client, actor_list)
     finally:
