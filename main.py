@@ -16,6 +16,7 @@ import re
 class VehicleStat:
     location: Location
     dist_travelled: float
+    wheel_speeds: List[float]
 
 
 def wheels_stopped(wheel_speeds: List[float]) -> bool:
@@ -79,7 +80,6 @@ def run():
 
             for i in range(num_timesteps):
                 # print(f"Time Step {i}")
-                wheel_speeds = get_wheel_speeds(actor_list[0])
                 world.tick()
 
                 world.debug.draw_box(box=carla.BoundingBox(friction_transform.location, extent * 1e-2),
@@ -90,7 +90,8 @@ def run():
                 for actor, vs in zip(actor_list, vehicle_stats):
                     new_loc = actor.get_location()
                     new_dist = vs.dist_travelled + new_loc.distance(vs.location)
-                    new_vehicle_stats.append(VehicleStat(new_loc, new_dist))
+                    new_wheel_speeds = get_wheel_speeds(actor)
+                    new_vehicle_stats.append(VehicleStat(new_loc, new_dist, wheel_speeds))
 
                 vehicle_stats = new_vehicle_stats
 
@@ -108,7 +109,7 @@ def run():
                         control.brake = 1.0
                         control.hand_brake = False
 
-                        if wheels_stopped(wheel_speeds):
+                        if wheels_stopped(vs.wheel_speeds):
                             actor.open_door(carla.VehicleDoor.All)
                             actor_vel = actor.get_velocity().length()
                             if actor_vel > 0.01:
