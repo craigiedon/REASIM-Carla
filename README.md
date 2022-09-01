@@ -1,12 +1,11 @@
-# REASIM-Carla
-SSS'23 Reasoned Simulation (REASIM) - CARLA Simulations
+# SSS'23 Reasoned Simulation (REASIM) - CARLA Simulations
 
 Runs a simulation of a Car accelerating on a straight road, braking, then attempting to open the doors when the car controller thinks it has stopped. The controller assumes the car has stopped when the wheel speed is 0. However, due to a slippery section on the road, the car can slide with non-zero velocity, even when wheels are stationary.
 
 ## Project Setup
 
 ### Building Telemetry Branch from Source
-Our script leverages wheel speed information taken from lower-level unreal telemetry data. Telemetry data access is not exposed in the mainline CARLA release, so will need to build the [joel-mb/telemetry_data](https://github.com/carla-simulator/carla/tree/joel-mb/telemetry_data) branch from source.
+Our script leverages wheel speed information taken from lower-level unreal telemetry data. Telemetry data access is not exposed in the mainline CARLA release, so we must build the [joel-mb/telemetry_data](https://github.com/carla-simulator/carla/tree/joel-mb/telemetry_data) branch from source.
 
 Instructions to Build CARLA from Source are [here](https://carla.readthedocs.io/en/latest/build_linux/).
 
