@@ -29,6 +29,26 @@ Run the Carla Server via
 
 In other terminal, run 
 
-    python main.py <num-sims> <friction-val>
+    python slippyDoorOpen.py
 
-Where `num-sims` is the number of times you want to run the simulation, and `friction-val` is the value of tire friction within the trigger zone (0.0 is frictionless, 1.0 is full friction)
+
+Which will run three simulations, each with a different friction value for the highlighted friction zone:
+- Friction = 1.0
+- Friction = 0.5
+- Friction = 0.0
+
+---
+### Friction = 1.0
+
+
+![Full Friction](images/fullFriction.gif)
+
+---
+
+### Friction = 0.0
+
+
+![No Friction](images/noFriction.gif)
+
+#### Console Output
+![Disparity](images/wheelSpeedDisparity.png)
