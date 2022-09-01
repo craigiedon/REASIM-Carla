@@ -1,4 +1,4 @@
-# SSS'23 Reasoned Simulation (REASIM) - CARLA Simulations
+# SSS'23 REASIM - CARLA Simulations
 
 Runs a simulation of a Car accelerating on a straight road, braking, then attempting to open the doors when the car controller thinks it has stopped. The controller assumes the car has stopped when the wheel speed is 0. However, due to a slippery section on the road, the car can slide with non-zero velocity, even when wheels are stationary.
 
